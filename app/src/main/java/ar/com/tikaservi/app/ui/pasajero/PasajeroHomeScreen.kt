@@ -107,7 +107,7 @@ private fun ViajeCard(viaje: Viaje) {
             Text("${viaje.fecha} - ${viaje.hora_salida}")
             viaje.precio?.let { Text("$ $it") }
             Text("Asientos disponibles: ${viaje.asientos_disponibles}")
-            viaje.nombre_conductor?.let { Text("Conductor: $it") }
+            viaje.conductor_nombre?.let { Text("Conductor: $it") }
         }
     }
 }

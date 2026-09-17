@@ -76,12 +76,18 @@ fun PasajeroLoginScreen(
                         if (resp.isSuccessful && resp.body() != null) {
                             val body = resp.body()!!
                             session.rolActivo = SessionManager.Rol.PASAJERO
-                            session.pasajeroId = body.pasajero.id
+                            session.pasajeroId = body.pasajero_id
                             session.pasajeroToken = body.token
-                            session.nombrePasajero = body.pasajero.nombre
+                            session.nombrePasajero = body.nombre
                             onLoginExitoso()
                         } else {
-                            error = "Usuario o contrasena incorrectos"
+                            val cuerpoError = resp.errorBody()?.string().orEmpty()
+                            error = when {
+                                cuerpoError.contains("EMAIL_NO_VERIFICADO") ->
+                                    "Todavia no verificaste tu correo. Revisa el codigo que te enviamos."
+                                resp.code() == 401 -> "Usuario o contrasena incorrectos"
+                                else -> "Error del servidor (${resp.code()})"
+                            }
                         }
                     } catch (e: Exception) {
                         error = "No se pudo conectar con el servidor: ${e.message}"

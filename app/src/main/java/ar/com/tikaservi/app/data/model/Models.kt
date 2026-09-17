@@ -1,10 +1,11 @@
 package ar.com.tikaservi.app.data.model
 
 /**
- * Modelos de datos que reflejan el esquema real de viajes.db / Postgres
- * (ver mapa técnico de tikaservi.com.ar). Los campos son nullable/con
- * default donde el backend los devuelve opcionalmente, para que Gson no
- * rompa el parseo si falta alguno.
+ * Modelos de datos verificados contra la API real (curl directo al
+ * servidor cloud, 17 sep 2026). OJO: las respuestas de login/registro
+ * son planas (los campos van sueltos en el JSON raiz), NO anidadas
+ * bajo "conductor"/"pasajero" como se habia asumido en la primera
+ * version -- ese era el bug que rompia el login con NullPointerException.
  */
 
 data class Conductor(
@@ -20,7 +21,13 @@ data class Conductor(
 )
 
 data class LoginConductorRequest(val usuario: String, val password: String)
-data class LoginConductorResponse(val conductor: Conductor)
+
+// Respuesta real: {"conductor_id":61,"nombre":"...","foto_url":"..."}
+data class LoginConductorResponse(
+    val conductor_id: Int,
+    val nombre: String,
+    val foto_url: String? = null
+)
 
 data class Vehiculo(
     val id: Int = 0,
@@ -43,7 +50,14 @@ data class Pasajero(
 )
 
 data class LoginPasajeroRequest(val usuario: String, val password: String)
-data class LoginPasajeroResponse(val pasajero: Pasajero, val token: String)
+
+// Respuesta real: {"pasajero_id":43,"nombre":"...","foto_url":"...","token":"..."}
+data class LoginPasajeroResponse(
+    val pasajero_id: Int,
+    val nombre: String,
+    val foto_url: String? = null,
+    val token: String
+)
 
 data class Viaje(
     val id: Int = 0,
@@ -59,7 +73,9 @@ data class Viaje(
     val estado: String = "activo",
     val acepta_encomiendas: Int = 0,
     val conductor_viajes_finalizados: Int? = null,
-    val nombre_conductor: String? = null
+    val conductor_nombre: String? = null,
+    val marca_modelo: String? = null,
+    val patente: String? = null
 )
 
 data class NuevoViajeRequest(

@@ -72,9 +72,9 @@ fun ChoferLoginScreen(
                             LoginConductorRequest(usuario.trim(), password)
                         )
                         if (resp.isSuccessful && resp.body() != null) {
-                            val conductor = resp.body()!!.conductor
+                            val conductor = resp.body()!!
                             session.rolActivo = SessionManager.Rol.CHOFER
-                            session.conductorId = conductor.id
+                            session.conductorId = conductor.conductor_id
                             session.nombreConductor = conductor.nombre
                             onLoginExitoso()
                         } else {
