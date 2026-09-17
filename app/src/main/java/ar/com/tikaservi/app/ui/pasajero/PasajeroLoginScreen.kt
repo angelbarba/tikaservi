@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PasajeroLoginScreen(
     onLoginExitoso: () -> Unit,
+    onIrARegistro: () -> Unit,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
@@ -107,6 +108,9 @@ fun PasajeroLoginScreen(
         }
 
         Spacer(Modifier.height(12.dp))
+        TextButton(onClick = onIrARegistro, modifier = Modifier.fillMaxWidth()) {
+            Text("Crear cuenta nueva")
+        }
         TextButton(onClick = onVolver, modifier = Modifier.fillMaxWidth()) {
             Text("Volver")
         }
