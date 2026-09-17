@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ar.com.tikaservi.app.BuildConfig
 
 @Composable
 fun RoleSelectionScreen(
@@ -51,5 +52,12 @@ fun RoleSelectionScreen(
         ) {
             Text("Soy chofer")
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "v${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

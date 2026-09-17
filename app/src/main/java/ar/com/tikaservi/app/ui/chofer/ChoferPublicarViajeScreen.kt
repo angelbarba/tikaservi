@@ -17,6 +17,7 @@ import ar.com.tikaservi.app.data.model.Vehiculo
 import ar.com.tikaservi.app.data.model.ViajeRequest
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
+import ar.com.tikaservi.app.ui.common.FechaSelector
 import kotlinx.coroutines.launch
 
 private val HORAS = (0..23).map { String.format("%02d:00", it) }
@@ -105,11 +106,7 @@ fun ChoferPublicarViajeScreen(
             LocalidadSelector("Destino", localidades, destino, onSeleccion = { destino = it }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(10.dp))
 
-            OutlinedTextField(
-                fecha, { fecha = it }, label = { Text("Fecha (AAAA-MM-DD)") },
-                placeholder = { Text("2026-09-20") },
-                modifier = Modifier.fillMaxWidth(), singleLine = true
-            )
+            FechaSelector(etiqueta = "Fecha", valorIso = fecha, onSeleccion = { fecha = it }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(10.dp))
 
             ExposedDropdownMenuBox(expanded = expandidoHora, onExpandedChange = { expandidoHora = it }) {

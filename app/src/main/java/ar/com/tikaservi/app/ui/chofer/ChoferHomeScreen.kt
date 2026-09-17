@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.data.model.Viaje
+import ar.com.tikaservi.app.BuildConfig
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.TabPillRow
 import kotlinx.coroutines.launch
@@ -38,6 +39,11 @@ fun ChoferHomeScreen(
             )
             TextButton(onClick = { session.cerrarSesion(); onCerrarSesion() }) { Text("Salir") }
         }
+        Text(
+            "v${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Spacer(Modifier.height(8.dp))
         TabPillRow(opciones = TABS, seleccionado = tab, onSeleccionar = { tab = it })
         Spacer(Modifier.height(12.dp))

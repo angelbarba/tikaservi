@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.dp
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.data.api.LocalidadesCache
 import ar.com.tikaservi.app.data.model.*
+import ar.com.tikaservi.app.BuildConfig
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
+import ar.com.tikaservi.app.ui.common.FechaSelector
 import ar.com.tikaservi.app.ui.common.TabPillRow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -54,6 +56,11 @@ fun PasajeroHomeScreen(
             )
             TextButton(onClick = { session.cerrarSesion(); onCerrarSesion() }) { Text("Salir") }
         }
+        Text(
+            "v${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Spacer(Modifier.height(8.dp))
         TabPillRow(opciones = TABS, seleccionado = tab, onSeleccionar = { tab = it })
         Spacer(Modifier.height(12.dp))
@@ -133,12 +140,11 @@ private fun BuscarViajeTab(localidades: List<String>, onVerViaje: (Int) -> Unit)
             OutlinedButton(onClick = { fecha = "" }) { Text("Cualquier fecha") }
         }
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = fecha,
-            onValueChange = { fecha = it },
-            label = { Text("Fecha (AAAA-MM-DD, opcional)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+        FechaSelector(
+            etiqueta = "Fecha (opcional)",
+            valorIso = fecha,
+            onSeleccion = { fecha = it },
+            modifier = Modifier.fillMaxWidth()
         )
         if (!tipoEncomienda) {
             Spacer(Modifier.height(8.dp))
@@ -239,7 +245,7 @@ private fun SolicitarViajeTab(localidades: List<String>, session: SessionManager
         Spacer(Modifier.height(8.dp))
         LocalidadSelector("Destino", localidades, destino, onSeleccion = { destino = it }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(fecha, { fecha = it }, label = { Text("Fecha (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        FechaSelector(etiqueta = "Fecha", valorIso = fecha, onSeleccion = { fecha = it }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         ExposedDropdownMenuBox(expanded = expandidoHora, onExpandedChange = { expandidoHora = it }) {
             OutlinedTextField(
