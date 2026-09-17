@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Tikaservi" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/tikaservi_primary</item>
+        <item name="android:windowBackground">@color/tikaservi_background</item>
+    </style>
+</resources>
