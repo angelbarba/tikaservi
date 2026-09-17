@@ -116,4 +116,46 @@ interface TikaserviApi {
         @Path("id") id: Int,
         @Body body: ReservaCancelarRequest
     ): Response<OkRespuesta>
+    // ---------------- Recuperar / restablecer contrasena ----------------
+
+    @POST("pasajeros/recuperar-password")
+    suspend fun recuperarPasswordPasajero(@Body body: RecuperarPasswordRequest): Response<RecuperarPasswordResponse>
+
+    @POST("pasajeros/restablecer-password")
+    suspend fun restablecerPasswordPasajero(@Body body: RestablecerPasswordRequest): Response<RestablecerPasswordResponse>
+
+    @POST("conductores/recuperar-password")
+    suspend fun recuperarPasswordConductor(@Body body: RecuperarPasswordRequest): Response<RecuperarPasswordResponse>
+
+    @POST("conductores/restablecer-password")
+    suspend fun restablecerPasswordConductor(@Body body: RestablecerPasswordRequest): Response<RestablecerPasswordResponse>
+
+    // ---------------- Editar datos propios ----------------
+
+    @PUT("pasajeros/{id}")
+    suspend fun editarPasajero(@Path("id") id: Int, @Body body: PasajeroEditRequest): Response<OkRespuesta>
+
+    @PUT("conductores/{id}")
+    suspend fun editarConductor(@Path("id") id: Int, @Body body: ConductorEditRequest): Response<OkRespuesta>
+
+    // ---------------- Solicitudes de pasajero ("pedir viaje") ----------------
+
+    @POST("solicitudes")
+    suspend fun crearSolicitud(@Body body: SolicitudRequest): Response<Solicitud>
+
+    @GET("solicitudes")
+    suspend fun buscarSolicitudes(
+        @Query("origen") origen: String? = null,
+        @Query("destino") destino: String? = null,
+        @Query("fecha") fecha: String? = null
+    ): List<SolicitudPublica>
+
+    @GET("pasajeros/{id}/solicitudes")
+    suspend fun getSolicitudesDePasajero(@Path("id") pasajeroId: Int): List<Solicitud>
+
+    @POST("solicitudes/{id}/cancelar")
+    suspend fun cancelarSolicitud(
+        @Path("id") id: Int,
+        @Body body: CancelarSolicitudRequest
+    ): Response<OkRespuesta>
 }

@@ -176,3 +176,90 @@ data class ReservaChofer(
 data class OkRespuesta(val ok: Boolean)
 
 data class ApiError(val detail: String? = null)
+
+// ---------- Recuperar / restablecer contrasena ----------
+
+data class RecuperarPasswordRequest(val identificador: String)
+
+data class RecuperarPasswordResponse(val ok: Boolean, val mensaje: String)
+
+data class RestablecerPasswordRequest(
+    val identificador: String,
+    val codigo: String,
+    val password: String
+)
+
+data class RestablecerPasswordResponse(val ok: Boolean, val mensaje: String)
+
+// ---------- Editar datos (requieren password_actual) ----------
+
+data class PasajeroEditRequest(
+    val password_actual: String,
+    val nombre: String? = null,
+    val dni: String? = null,
+    val telefono: String? = null,
+    val email: String? = null,
+    val usuario: String? = null,
+    val password: String? = null
+)
+
+data class ConductorEditRequest(
+    val password_actual: String,
+    val nombre: String? = null,
+    val telefono: String? = null,
+    val email: String? = null,
+    val usuario: String? = null,
+    val password: String? = null
+)
+
+// ---------- Solicitudes de pasajero ("pedir viaje") ----------
+
+data class SolicitudRequest(
+    val pasajero_id: Int,
+    val origen: String,
+    val destino: String,
+    val fecha: String,
+    val franjas_horarias: List<String>,
+    val comentario: String? = null,
+    val tipo: String = "viaje",
+    val asientos: Int? = null,
+    val tamano_encomienda: String? = null
+)
+
+// Tal como la ve el propio pasajero (sus solicitudes)
+data class Solicitud(
+    val id: Int,
+    val pasajero_id: Int,
+    val origen: String,
+    val destino: String,
+    val fecha: String,
+    val franjas_horarias: List<String>,
+    val comentario: String? = null,
+    val estado: String,
+    val tipo: String,
+    val asientos: Int? = null,
+    val tamano_encomienda: String? = null,
+    val creado_en: String? = null
+)
+
+// Tal como la ve el chofer al buscar candidatos (incluye datos del pasajero)
+data class SolicitudPublica(
+    val id: Int,
+    val origen: String,
+    val destino: String,
+    val fecha: String,
+    val franjas_horarias: List<String>,
+    val comentario: String? = null,
+    val tipo: String,
+    val asientos: Int? = null,
+    val tamano_encomienda: String? = null,
+    val creado_en: String? = null,
+    val pasajero_id: Int,
+    val pasajero_nombre: String,
+    val pasajero_telefono: String? = null,
+    val pasajero_foto_url: String? = null,
+    val pasajero_viajes_realizados: Int? = null,
+    val whatsapp_link: String? = null
+)
+
+data class CancelarSolicitudRequest(val pasajero_id: Int)

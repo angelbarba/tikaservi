@@ -12,12 +12,14 @@ import androidx.compose.ui.unit.dp
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.data.model.LoginConductorRequest
 import ar.com.tikaservi.app.data.session.SessionManager
+import ar.com.tikaservi.app.ui.common.TabPillRow
 import kotlinx.coroutines.launch
 
 @Composable
 fun ChoferLoginScreen(
     onLoginExitoso: () -> Unit,
     onIrARegistro: () -> Unit,
+    onIrARecuperar: () -> Unit,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
@@ -33,8 +35,12 @@ fun ChoferLoginScreen(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Ingresar como chofer", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(24.dp))
+        TabPillRow(
+            opciones = listOf("Crear cuenta", "Ya tengo cuenta"),
+            seleccionado = "Ya tengo cuenta",
+            onSeleccionar = { if (it == "Crear cuenta") onIrARegistro() }
+        )
+        Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
             value = usuario,
@@ -94,13 +100,13 @@ fun ChoferLoginScreen(
             if (cargando) {
                 CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
             } else {
-                Text("Ingresar")
+                Text("Iniciar sesion")
             }
         }
 
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = onIrARegistro, modifier = Modifier.fillMaxWidth()) {
-            Text("Crear cuenta nueva")
+        TextButton(onClick = onIrARecuperar, modifier = Modifier.fillMaxWidth()) {
+            Text("Olvidaste tu contrasena?")
         }
         TextButton(onClick = onVolver, modifier = Modifier.fillMaxWidth()) {
             Text("Volver")

@@ -20,11 +20,13 @@ import coil.compose.AsyncImage
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.ui.common.textoAParteTexto
 import ar.com.tikaservi.app.ui.common.uriAFotoPart
+import ar.com.tikaservi.app.ui.common.TabPillRow
 import kotlinx.coroutines.launch
 
 @Composable
 fun PasajeroRegistroScreen(
     onRegistroExitoso: (pasajeroId: Int) -> Unit,
+    onIrALogin: () -> Unit,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
@@ -50,6 +52,12 @@ fun PasajeroRegistroScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
+        TabPillRow(
+            opciones = listOf("Crear cuenta", "Ya tengo cuenta"),
+            seleccionado = "Crear cuenta",
+            onSeleccionar = { if (it == "Ya tengo cuenta") onIrALogin() }
+        )
+        Spacer(Modifier.height(16.dp))
         Text("Crear cuenta de pasajero", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(20.dp))
 

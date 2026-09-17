@@ -11,7 +11,10 @@ import androidx.compose.ui.unit.dp
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.data.model.Viaje
 import ar.com.tikaservi.app.data.session.SessionManager
+import ar.com.tikaservi.app.ui.common.TabPillRow
 import kotlinx.coroutines.launch
+
+private val TABS = listOf("Mis viajes", "Pasajeros", "Datos")
 
 @Composable
 fun ChoferHomeScreen(
@@ -21,9 +24,40 @@ fun ChoferHomeScreen(
     onVerReservas: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val session = remember { SessionManager(context) }
+    var tab by remember { mutableStateOf(TABS[0]) }
 
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Hola, ${session.nombreConductor ?: "chofer"}",
+                style = MaterialTheme.typography.titleLarge
+            )
+            TextButton(onClick = { session.cerrarSesion(); onCerrarSesion() }) { Text("Salir") }
+        }
+        Spacer(Modifier.height(8.dp))
+        TabPillRow(opciones = TABS, seleccionado = tab, onSeleccionar = { tab = it })
+        Spacer(Modifier.height(12.dp))
+
+        when (tab) {
+            "Mis viajes" -> MisViajesTab(session, onVerVehiculos, onPublicarViaje, onVerReservas)
+            "Pasajeros" -> ChoferPasajerosTab()
+            "Datos" -> ChoferDatosTab(session)
+        }
+    }
+}
+
+@Composable
+private fun MisViajesTab(
+    session: SessionManager,
+    onVerVehiculos: () -> Unit,
+    onPublicarViaje: () -> Unit,
+    onVerReservas: (Int) -> Unit
+) {
+    val scope = rememberCoroutineScope()
     var viajes by remember { mutableStateOf<List<Viaje>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
     var mensaje by remember { mutableStateOf<String?>(null) }
@@ -45,36 +79,15 @@ fun ChoferHomeScreen(
 
     LaunchedEffect(Unit) { cargar() }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "Hola, ${session.nombreConductor ?: "chofer"}",
-                style = MaterialTheme.typography.titleLarge
-            )
-            TextButton(onClick = { session.cerrarSesion(); onCerrarSesion() }) {
-                Text("Salir")
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
+    Column(modifier = Modifier.fillMaxSize()) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onVerVehiculos) { Text("Mis vehiculos") }
             Button(onClick = onPublicarViaje) { Text("Publicar viaje") }
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("Mis viajes publicados", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
-
-        if (cargando) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
-        mensaje?.let {
-            Text(it, modifier = Modifier.padding(vertical = 8.dp))
-        }
+        if (cargando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        mensaje?.let { Text(it, modifier = Modifier.padding(vertical = 8.dp)) }
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(viajes) { viaje ->

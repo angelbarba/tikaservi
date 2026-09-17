@@ -12,13 +12,14 @@ import androidx.navigation.navArgument
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.chofer.ChoferHomeScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferLoginScreen
+import ar.com.tikaservi.app.ui.chofer.ChoferRecuperarPasswordScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferPublicarViajeScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferRegistroScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferReservasViajeScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferVehiculosScreen
 import ar.com.tikaservi.app.ui.pasajero.PasajeroHomeScreen
 import ar.com.tikaservi.app.ui.pasajero.PasajeroLoginScreen
-import ar.com.tikaservi.app.ui.pasajero.PasajeroMisReservasScreen
+import ar.com.tikaservi.app.ui.pasajero.PasajeroRecuperarPasswordScreen
 import ar.com.tikaservi.app.ui.pasajero.PasajeroRegistroScreen
 import ar.com.tikaservi.app.ui.pasajero.PasajeroReservaScreen
 import ar.com.tikaservi.app.ui.pasajero.PasajeroVerificarEmailScreen
@@ -29,13 +30,14 @@ private object Rutas {
 
     const val LOGIN_PASAJERO = "login_pasajero"
     const val REGISTRO_PASAJERO = "registro_pasajero"
+    const val RECUPERAR_PASAJERO = "recuperar_pasajero"
     const val VERIFICAR_EMAIL_PASAJERO = "verificar_email_pasajero/{pasajeroId}"
     const val HOME_PASAJERO = "home_pasajero"
     const val VIAJE_DETALLE = "viaje_detalle/{viajeId}"
-    const val MIS_RESERVAS_PASAJERO = "mis_reservas_pasajero"
 
     const val LOGIN_CHOFER = "login_chofer"
     const val REGISTRO_CHOFER = "registro_chofer"
+    const val RECUPERAR_CHOFER = "recuperar_chofer"
     const val HOME_CHOFER = "home_chofer"
     const val VEHICULOS_CHOFER = "vehiculos_chofer"
     const val PUBLICAR_VIAJE = "publicar_viaje"
@@ -75,7 +77,12 @@ fun TikaserviNavHost() {
                         popUpTo(Rutas.SELECCION_ROL) { inclusive = true }
                     }
                 },
-                onIrARegistro = { navController.navigate(Rutas.REGISTRO_PASAJERO) },
+                onIrARegistro = {
+                    navController.navigate(Rutas.REGISTRO_PASAJERO) {
+                        popUpTo(Rutas.LOGIN_PASAJERO) { inclusive = true }
+                    }
+                },
+                onIrARecuperar = { navController.navigate(Rutas.RECUPERAR_PASAJERO) },
                 onVolver = { navController.popBackStack() }
             )
         }
@@ -83,9 +90,20 @@ fun TikaserviNavHost() {
             PasajeroRegistroScreen(
                 onRegistroExitoso = { pasajeroId ->
                     navController.navigate(Rutas.verificarEmail(pasajeroId)) {
-                        popUpTo(Rutas.LOGIN_PASAJERO) { inclusive = false }
+                        popUpTo(Rutas.SELECCION_ROL) { inclusive = false }
                     }
                 },
+                onIrALogin = {
+                    navController.navigate(Rutas.LOGIN_PASAJERO) {
+                        popUpTo(Rutas.REGISTRO_PASAJERO) { inclusive = true }
+                    }
+                },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+        composable(Rutas.RECUPERAR_PASAJERO) {
+            PasajeroRecuperarPasswordScreen(
+                onListo = { navController.popBackStack() },
                 onVolver = { navController.popBackStack() }
             )
         }
@@ -111,8 +129,7 @@ fun TikaserviNavHost() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onVerViaje = { viajeId -> navController.navigate(Rutas.viajeDetalle(viajeId)) },
-                onVerMisReservas = { navController.navigate(Rutas.MIS_RESERVAS_PASAJERO) }
+                onVerViaje = { viajeId -> navController.navigate(Rutas.viajeDetalle(viajeId)) }
             )
         }
         composable(
@@ -126,10 +143,6 @@ fun TikaserviNavHost() {
                 onVolver = { navController.popBackStack() }
             )
         }
-        composable(Rutas.MIS_RESERVAS_PASAJERO) {
-            PasajeroMisReservasScreen(onVolver = { navController.popBackStack() })
-        }
-
         // ---------------- Chofer ----------------
 
         composable(Rutas.LOGIN_CHOFER) {
@@ -139,7 +152,12 @@ fun TikaserviNavHost() {
                         popUpTo(Rutas.SELECCION_ROL) { inclusive = true }
                     }
                 },
-                onIrARegistro = { navController.navigate(Rutas.REGISTRO_CHOFER) },
+                onIrARegistro = {
+                    navController.navigate(Rutas.REGISTRO_CHOFER) {
+                        popUpTo(Rutas.LOGIN_CHOFER) { inclusive = true }
+                    }
+                },
+                onIrARecuperar = { navController.navigate(Rutas.RECUPERAR_CHOFER) },
                 onVolver = { navController.popBackStack() }
             )
         }
@@ -150,6 +168,17 @@ fun TikaserviNavHost() {
                         popUpTo(Rutas.SELECCION_ROL) { inclusive = true }
                     }
                 },
+                onIrALogin = {
+                    navController.navigate(Rutas.LOGIN_CHOFER) {
+                        popUpTo(Rutas.REGISTRO_CHOFER) { inclusive = true }
+                    }
+                },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+        composable(Rutas.RECUPERAR_CHOFER) {
+            ChoferRecuperarPasswordScreen(
+                onListo = { navController.popBackStack() },
                 onVolver = { navController.popBackStack() }
             )
         }

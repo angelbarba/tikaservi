@@ -7,25 +7,32 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val TikaserviVioleta = Color(0xFFC026D3)
-val TikaserviVioletaOscuro = Color(0xFF86198F)
-val TikaserviFondoClaro = Color(0xFFFFFBFF)
-val TikaserviFondoOscuro = Color(0xFF201A1F)
+// Paleta calcada del portal web real (pasajero-viajes.html / conductor-viajes.html):
+// blanco y negro, pastillas grises para lo no seleccionado.
+val TikaserviNegro = Color(0xFF111111)
+val TikaserviGrisClaro = Color(0xFFF1F1F1)
+val TikaserviGrisMedio = Color(0xFFE3E3E3)
+val TikaserviFondoClaro = Color(0xFFFAFAFA)
+val TikaserviFondoOscuro = Color(0xFF121212)
 
 private val LightColors = lightColorScheme(
-    primary = TikaserviVioleta,
+    primary = TikaserviNegro,
     onPrimary = Color.White,
-    secondary = TikaserviVioletaOscuro,
+    secondary = TikaserviGrisMedio,
+    onSecondary = TikaserviNegro,
     background = TikaserviFondoClaro,
-    surface = TikaserviFondoClaro
+    surface = Color.White,
+    surfaceVariant = TikaserviGrisClaro
 )
 
 private val DarkColors = darkColorScheme(
-    primary = TikaserviVioleta,
-    onPrimary = Color.White,
-    secondary = Color(0xFFE9A6F1),
+    primary = Color.White,
+    onPrimary = TikaserviNegro,
+    secondary = Color(0xFF3A3A3A),
+    onSecondary = Color.White,
     background = TikaserviFondoOscuro,
-    surface = TikaserviFondoOscuro
+    surface = Color(0xFF1C1C1C),
+    surfaceVariant = Color(0xFF2A2A2A)
 )
 
 @Composable
