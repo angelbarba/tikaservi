@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.pasajero
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -93,7 +95,7 @@ fun PasajeroLoginScreen(
                                 cuerpoError.contains("EMAIL_NO_VERIFICADO") ->
                                     "Todavia no verificaste tu correo. Revisa el codigo que te enviamos."
                                 resp.code() == 401 -> "Usuario o contrasena incorrectos"
-                                else -> "Error del servidor (${resp.code()})"
+                                else -> mensajeDeError(cuerpoError, "Error del servidor (${resp.code()})")
                             }
                         }
                     } catch (e: Exception) {

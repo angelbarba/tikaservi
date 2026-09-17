@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.pasajero
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,7 +74,7 @@ fun PasajeroVerificarEmailScreen(
                             session.nombrePasajero = body.nombre
                             onVerificado()
                         } else {
-                            error = resp.errorBody()?.string()?.take(200) ?: "Codigo invalido"
+                            error = mensajeDeError(resp.errorBody()?.string(), "Codigo invalido")
                         }
                     } catch (e: Exception) {
                         error = "No se pudo conectar: ${e.message}"

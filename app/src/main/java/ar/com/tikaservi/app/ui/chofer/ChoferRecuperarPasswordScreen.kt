@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.chofer
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,7 +53,7 @@ fun ChoferRecuperarPasswordScreen(onListo: () -> Unit, onVolver: () -> Unit) {
                                 mensaje = resp.body()?.mensaje ?: "Te enviamos un codigo"
                                 pasoDos = true
                             } else {
-                                error = resp.errorBody()?.string()?.take(200) ?: "No se pudo procesar el pedido"
+                                error = mensajeDeError(resp.errorBody()?.string(), "No se pudo procesar el pedido")
                             }
                         } catch (e: Exception) {
                             error = "No se pudo conectar: ${e.message}"
@@ -95,7 +97,7 @@ fun ChoferRecuperarPasswordScreen(onListo: () -> Unit, onVolver: () -> Unit) {
                                 mensaje = resp.body()?.mensaje ?: "Contrasena actualizada"
                                 onListo()
                             } else {
-                                error = resp.errorBody()?.string()?.take(200) ?: "Codigo incorrecto"
+                                error = mensajeDeError(resp.errorBody()?.string(), "Codigo incorrecto")
                             }
                         } catch (e: Exception) {
                             error = "No se pudo conectar: ${e.message}"

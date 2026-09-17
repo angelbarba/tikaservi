@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.chofer
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -126,7 +128,7 @@ fun ChoferVehiculosScreen(onVolver: () -> Unit) {
                                     marcaModelo = ""; patente = ""; asientos = "4"
                                     cargar()
                                 } else {
-                                    errorForm = resp.errorBody()?.string()?.take(200) ?: "Error del servidor"
+                                    errorForm = mensajeDeError(resp.errorBody()?.string(), "Error del servidor")
                                 }
                             } catch (e: Exception) {
                                 errorForm = "No se pudo conectar: ${e.message}"

@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.pasajero
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -143,7 +145,7 @@ fun PasajeroReservaScreen(
                                 exito = "Reserva confirmada (n° ${resp.body()!!.reserva_id})"
                                 onReservaExitosa()
                             } else {
-                                error = resp.errorBody()?.string()?.take(200) ?: "Error del servidor (${resp.code()})"
+                                error = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
                             }
                         } catch (e: Exception) {
                             error = "No se pudo conectar: ${e.message}"

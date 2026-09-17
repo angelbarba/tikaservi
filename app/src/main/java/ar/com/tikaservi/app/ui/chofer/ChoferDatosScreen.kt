@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.chofer
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -78,7 +80,7 @@ fun ChoferDatosTab(session: SessionManager) {
                             if (nombre.isNotBlank()) session.nombreConductor = nombre
                             passwordActual = ""; passwordNueva = ""
                         } else {
-                            error = resp.errorBody()?.string()?.take(200) ?: "Error del servidor (${resp.code()})"
+                            error = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
                         }
                     } catch (e: Exception) {
                         error = "No se pudo conectar: ${e.message}"

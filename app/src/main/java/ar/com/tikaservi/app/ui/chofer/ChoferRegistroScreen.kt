@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.chofer
 
+import ar.com.tikaservi.app.ui.common.mensajeDeError
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -155,7 +157,7 @@ fun ChoferRegistroScreen(
                             session.nombreConductor = body.nombre
                             onRegistroExitoso()
                         } else {
-                            error = resp.errorBody()?.string()?.take(200) ?: "Error del servidor (${resp.code()})"
+                            error = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
                         }
                     } catch (e: Exception) {
                         error = "No se pudo conectar con el servidor: ${e.message}"
