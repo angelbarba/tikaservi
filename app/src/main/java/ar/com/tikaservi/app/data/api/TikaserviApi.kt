@@ -38,6 +38,21 @@ interface TikaserviApi {
     @POST("vehiculos")
     suspend fun crearVehiculo(@Body body: VehiculoRequest): Response<VehiculoRespuesta>
 
+    @PUT("vehiculos/{id}")
+    suspend fun editarVehiculo(@Path("id") id: Int, @Body body: VehiculoEditRequest): Response<OkRespuesta>
+
+    @POST("vehiculos/{id}/desactivar")
+    suspend fun desactivarVehiculo(@Path("id") id: Int, @Query("conductor_id") conductorId: Int): Response<OkRespuesta>
+
+    @POST("vehiculos/{id}/activar")
+    suspend fun activarVehiculo(@Path("id") id: Int, @Query("conductor_id") conductorId: Int): Response<OkRespuesta>
+
+    @DELETE("vehiculos/{id}")
+    suspend fun eliminarVehiculo(@Path("id") id: Int, @Query("conductor_id") conductorId: Int): Response<OkRespuesta>
+
+    @POST("conductores/solicitar-codigo-activacion")
+    suspend fun solicitarCodigoActivacion(@Body body: SolicitarCodigoActivacionRequest): Response<OkRespuesta>
+
     @GET("conductores/{id}/viajes")
     suspend fun getViajesDeConductor(@Path("id") conductorId: Int): List<Viaje>
 

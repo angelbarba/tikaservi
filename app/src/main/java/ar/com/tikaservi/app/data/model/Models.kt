@@ -43,6 +43,21 @@ data class VehiculoRequest(
 
 data class VehiculoRespuesta(val vehiculo_id: Int)
 
+data class VehiculoEditRequest(
+    val conductor_id: Int,
+    val marca_modelo: String? = null,
+    val patente: String? = null,
+    val asientos_totales: Int? = null
+)
+
+data class SolicitarCodigoActivacionRequest(
+    val nombre: String,
+    val telefono: String,
+    val email: String? = null,
+    val usuario: String? = null,
+    val dni: String? = null
+)
+
 // ---------- Pasajero ----------
 
 data class LoginPasajeroRequest(val usuario: String, val password: String)

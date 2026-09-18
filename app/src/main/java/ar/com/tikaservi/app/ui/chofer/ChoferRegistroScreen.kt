@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import ar.com.tikaservi.app.data.api.ApiClient
+import ar.com.tikaservi.app.data.model.SolicitarCodigoActivacionRequest
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.textoAParteTexto
 import ar.com.tikaservi.app.ui.common.uriAFotoPart
@@ -42,6 +43,15 @@ fun ChoferRegistroScreen(
     var usuario by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var codigoActivacion by remember { mutableStateOf("") }
+    var mostrarSolicitudCodigo by remember { mutableStateOf(false) }
+    var solNombre by remember { mutableStateOf("") }
+    var solTelefono by remember { mutableStateOf("") }
+    var solEmail by remember { mutableStateOf("") }
+    var solUsuario by remember { mutableStateOf("") }
+    var solDni by remember { mutableStateOf("") }
+    var solEnviando by remember { mutableStateOf(false) }
+    var solError by remember { mutableStateOf<String?>(null) }
+    var solEnviada by remember { mutableStateOf(false) }
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
     var cargando by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -112,6 +122,93 @@ fun ChoferRegistroScreen(
             label = { Text("Codigo de activacion") },
             modifier = Modifier.fillMaxWidth(), singleLine = true
         )
+
+        Spacer(Modifier.height(6.dp))
+        if (solEnviada) {
+            Text(
+                "Listo, avisamos al administrador. Te va a contactar por WhatsApp con tu codigo.",
+                style = MaterialTheme.typography.bodySmall
+            )
+        } else if (!mostrarSolicitudCodigo) {
+            TextButton(onClick = { mostrarSolicitudCodigo = true }) {
+                Text("No tenes codigo de activacion? Solicitalo")
+            }
+        } else {
+            Spacer(Modifier.height(4.dp))
+            Text("Solicitar codigo de activacion", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                solNombre, { solNombre = it; solError = null },
+                label = { Text("Nombre completo") }, modifier = Modifier.fillMaxWidth(), singleLine = true
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                solTelefono, { solTelefono = it; solError = null },
+                label = { Text("Telefono") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(), singleLine = true
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                solDni, { solDni = it; solError = null },
+                label = { Text("DNI (opcional)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(), singleLine = true
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                solUsuario, { solUsuario = it; solError = null },
+                label = { Text("Usuario (opcional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                solEmail, { solEmail = it; solError = null },
+                label = { Text("Email (opcional)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(), singleLine = true
+            )
+            solError?.let {
+                Spacer(Modifier.height(6.dp))
+                Text(it, color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        if (solNombre.isBlank() || solTelefono.isBlank()) {
+                            solError = "Completa nombre y telefono"
+                            return@Button
+                        }
+                        solEnviando = true
+                        scope.launch {
+                            try {
+                                val resp = ApiClient.api.solicitarCodigoActivacion(
+                                    SolicitarCodigoActivacionRequest(
+                                        nombre = solNombre.trim(),
+                                        telefono = solTelefono.trim(),
+                                        email = solEmail.trim().ifBlank { null },
+                                        usuario = solUsuario.trim().ifBlank { null },
+                                        dni = solDni.trim().ifBlank { null }
+                                    )
+                                )
+                                if (resp.isSuccessful) {
+                                    solEnviada = true
+                                    mostrarSolicitudCodigo = false
+                                } else {
+                                    solError = mensajeDeError(resp.errorBody()?.string(), "Error del servidor")
+                                }
+                            } catch (e: Exception) {
+                                solError = "No se pudo conectar: ${e.message}"
+                            } finally {
+                                solEnviando = false
+                            }
+                        }
+                    },
+                    enabled = !solEnviando
+                ) { Text("Enviar solicitud") }
+                OutlinedButton(onClick = { mostrarSolicitudCodigo = false }, enabled = !solEnviando) { Text("Cancelar") }
+            }
+        }
 
         error?.let {
             Spacer(Modifier.height(10.dp))
