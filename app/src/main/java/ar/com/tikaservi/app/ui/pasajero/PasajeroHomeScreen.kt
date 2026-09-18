@@ -2,6 +2,17 @@ package ar.com.tikaservi.app.ui.pasajero
 
 import ar.com.tikaservi.app.ui.common.mensajeDeError
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.net.Uri
+import android.os.Looper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -366,6 +377,7 @@ private fun SolicitarViajeTab(localidades: List<String>, session: SessionManager
 @Composable
 private fun MisReservasTab(session: SessionManager, soloHistorial: Boolean) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var reservas by remember { mutableStateOf<List<ReservaPasajero>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
     var mensaje by remember { mutableStateOf<String?>(null) }
@@ -403,34 +415,240 @@ private fun MisReservasTab(session: SessionManager, soloHistorial: Boolean) {
         mensaje?.let { Text(it, modifier = Modifier.padding(vertical = 8.dp)) }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(reservas) { reserva ->
-                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("${reserva.origen} - ${reserva.destino}", style = MaterialTheme.typography.titleMedium)
-                        Text("${reserva.fecha} - ${reserva.hora_salida}")
-                        Text("Tipo: ${reserva.tipo}${reserva.tamano_encomienda?.let { " ($it)" } ?: ""}")
-                        if (reserva.tipo == "pasajero") Text("Asientos reservados: ${reserva.asientos_reservados}")
-                        Text("Estado reserva: ${reserva.estado} - Estado viaje: ${reserva.viaje_estado}")
-                        reserva.conductor_nombre?.let { Text("Conductor: $it") }
-                        if (!soloHistorial && reserva.estado == "confirmada") {
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedButton(onClick = {
-                                scope.launch {
-                                    try {
-                                        // Fix B-01: antes se ignoraba isSuccessful.
-                                        val resp = ApiClient.api.cancelarReserva(reserva.id, ReservaCancelarRequest(session.pasajeroId))
-                                        if (resp.isSuccessful) {
-                                            cargar()
-                                        } else {
-                                            mensaje = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
-                                        }
-                                    } catch (e: Exception) {
-                                        mensaje = "No se pudo cancelar: ${e.message}"
-                                    }
+                ReservaCard(
+                    reserva = reserva,
+                    soloHistorial = soloHistorial,
+                    session = session,
+                    context = context,
+                    onCancelar = {
+                        scope.launch {
+                            try {
+                                // Fix B-01: antes se ignoraba isSuccessful.
+                                val resp = ApiClient.api.cancelarReserva(reserva.id, ReservaCancelarRequest(session.pasajeroId))
+                                if (resp.isSuccessful) {
+                                    cargar()
+                                } else {
+                                    mensaje = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
                                 }
-                            }) { Text("Cancelar reserva") }
+                            } catch (e: Exception) {
+                                mensaje = "No se pudo cancelar: ${e.message}"
+                            }
+                        }
+                    },
+                    onGuardarAsientos = { nuevaCantidad, onListo ->
+                        // P-07
+                        scope.launch {
+                            try {
+                                val resp = ApiClient.api.editarReserva(
+                                    reserva.id,
+                                    ReservaEditRequest(pasajero_id = session.pasajeroId, asientos = nuevaCantidad)
+                                )
+                                if (resp.isSuccessful) {
+                                    onListo(null)
+                                    cargar()
+                                } else {
+                                    onListo(mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})"))
+                                }
+                            } catch (e: Exception) {
+                                onListo("No se pudo guardar: ${e.message}")
+                            }
+                        }
+                    },
+                    onGuardarPuntoRetiro = { lat, lng, onListo ->
+                        // P-08
+                        scope.launch {
+                            try {
+                                val resp = ApiClient.api.actualizarPuntoRetiro(
+                                    reserva.id,
+                                    PuntoRetiroRequest(pasajero_id = session.pasajeroId, lat = lat, lng = lng)
+                                )
+                                if (resp.isSuccessful) {
+                                    onListo(null)
+                                    cargar()
+                                } else {
+                                    onListo(mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})"))
+                                }
+                            } catch (e: Exception) {
+                                onListo("No se pudo guardar: ${e.message}")
+                            }
                         }
                     }
+                )
+            }
+        }
+    }
+}
+
+// P-08: sin dependencia de Google Play Services; usa el LocationManager del sistema.
+private fun obtenerUbicacionActual(
+    context: android.content.Context,
+    onResultado: (Double, Double) -> Unit,
+    onError: (String) -> Unit
+) {
+    val lm = context.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager
+    val proveedor = when {
+        lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+        lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+        else -> null
+    }
+    if (proveedor == null) {
+        onError("Activa la ubicacion del dispositivo para marcar el punto de retiro")
+        return
+    }
+    try {
+        lm.requestSingleUpdate(proveedor, object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                onResultado(location.latitude, location.longitude)
+            }
+        }, Looper.getMainLooper())
+    } catch (e: SecurityException) {
+        onError("Sin permiso de ubicacion")
+    }
+}
+
+@Composable
+private fun ReservaCard(
+    reserva: ReservaPasajero,
+    soloHistorial: Boolean,
+    session: SessionManager,
+    context: android.content.Context,
+    onCancelar: () -> Unit,
+    onGuardarAsientos: (Int, (String?) -> Unit) -> Unit,
+    onGuardarPuntoRetiro: (Double, Double, (String?) -> Unit) -> Unit
+) {
+    var editandoAsientos by remember { mutableStateOf(false) }
+    var nuevaCantidad by remember(reserva.id) { mutableStateOf(reserva.asientos_reservados.toString()) }
+    var guardandoAsientos by remember { mutableStateOf(false) }
+    var buscandoUbicacion by remember { mutableStateOf(false) }
+    var errorLocal by remember { mutableStateOf<String?>(null) }
+
+    val permisoUbicacion = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) {
+            buscandoUbicacion = true
+            obtenerUbicacionActual(
+                context,
+                onResultado = { lat, lng ->
+                    onGuardarPuntoRetiro(lat, lng) { err ->
+                        buscandoUbicacion = false
+                        errorLocal = err
+                    }
+                },
+                onError = { err -> buscandoUbicacion = false; errorLocal = err }
+            )
+        } else {
+            errorLocal = "Sin permiso de ubicacion no se puede marcar el punto de retiro"
+        }
+    }
+
+    fun pedirUbicacionYGuardar() {
+        errorLocal = null
+        val concedido = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (concedido) {
+            buscandoUbicacion = true
+            obtenerUbicacionActual(
+                context,
+                onResultado = { lat, lng ->
+                    onGuardarPuntoRetiro(lat, lng) { err ->
+                        buscandoUbicacion = false
+                        errorLocal = err
+                    }
+                },
+                onError = { err -> buscandoUbicacion = false; errorLocal = err }
+            )
+        } else {
+            permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    val puedeModificar = !soloHistorial && reserva.estado == "confirmada" && reserva.viaje_estado == "activo"
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("${reserva.origen} - ${reserva.destino}", style = MaterialTheme.typography.titleMedium)
+            Text("${reserva.fecha} - ${reserva.hora_salida}")
+            Text("Tipo: ${reserva.tipo}${reserva.tamano_encomienda?.let { " ($it)" } ?: ""}")
+            if (reserva.tipo == "pasajero") Text("Asientos reservados: ${reserva.asientos_reservados}")
+            Text("Estado reserva: ${reserva.estado} - Estado viaje: ${reserva.viaje_estado}")
+            reserva.conductor_nombre?.let { Text("Conductor: $it") }
+            if (reserva.origen_deseado != null || reserva.destino_deseado != null) {
+                Text(
+                    "Reservaste desde: ${reserva.origen_deseado ?: reserva.origen} -> ${reserva.destino_deseado ?: reserva.destino}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (reserva.punto_retiro_lat != null && reserva.punto_retiro_lng != null) {
+                Text("Punto de retiro guardado", style = MaterialTheme.typography.bodySmall)
+            }
+
+            errorLocal?.let {
+                Spacer(Modifier.height(6.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            if (!soloHistorial && reserva.estado == "confirmada") {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (reserva.punto_retiro_lat != null && reserva.punto_retiro_lng != null) {
+                        OutlinedButton(onClick = {
+                            val uri = Uri.parse("geo:${reserva.punto_retiro_lat},${reserva.punto_retiro_lng}?q=${reserva.punto_retiro_lat},${reserva.punto_retiro_lng}")
+                            context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        }) { Text("Ver punto de retiro") }
+                    }
+                    OutlinedButton(enabled = !buscandoUbicacion, onClick = { pedirUbicacionYGuardar() }) {
+                        Text(
+                            when {
+                                buscandoUbicacion -> "Obteniendo ubicacion..."
+                                reserva.punto_retiro_lat != null -> "Actualizar punto de retiro"
+                                else -> "Marcar punto de retiro (mi ubicacion)"
+                            }
+                        )
+                    }
                 }
+            }
+
+            if (puedeModificar && reserva.tipo == "pasajero") {
+                Spacer(Modifier.height(8.dp))
+                if (editandoAsientos) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = nuevaCantidad,
+                            onValueChange = { nuevaCantidad = it.filter { c -> c.isDigit() } },
+                            label = { Text("Asientos") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.width(110.dp),
+                            singleLine = true
+                        )
+                        Button(
+                            enabled = !guardandoAsientos,
+                            onClick = {
+                                val cantidad = nuevaCantidad.toIntOrNull()
+                                if (cantidad == null || cantidad < 1) {
+                                    errorLocal = "Cantidad invalida"
+                                    return@Button
+                                }
+                                guardandoAsientos = true
+                                errorLocal = null
+                                onGuardarAsientos(cantidad) { err ->
+                                    guardandoAsientos = false
+                                    if (err == null) editandoAsientos = false else errorLocal = err
+                                }
+                            }
+                        ) { Text(if (guardandoAsientos) "Guardando..." else "Guardar") }
+                        TextButton(onClick = { editandoAsientos = false; errorLocal = null }) { Text("Cancelar") }
+                    }
+                } else {
+                    OutlinedButton(onClick = { editandoAsientos = true }) { Text("Editar asientos") }
+                }
+            }
+
+            if (!soloHistorial && reserva.estado == "confirmada") {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onCancelar) { Text("Cancelar reserva") }
             }
         }
     }

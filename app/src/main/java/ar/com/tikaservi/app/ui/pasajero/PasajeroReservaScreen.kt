@@ -14,9 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ar.com.tikaservi.app.data.api.ApiClient
+import ar.com.tikaservi.app.data.api.LocalidadesCache
 import ar.com.tikaservi.app.data.model.ReservaRequest
 import ar.com.tikaservi.app.data.model.Viaje
 import ar.com.tikaservi.app.data.session.SessionManager
+import ar.com.tikaservi.app.ui.common.LocalidadSelector
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +40,10 @@ fun PasajeroReservaScreen(
     var cargando by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var exito by remember { mutableStateOf<String?>(null) }
+    var localidades by remember { mutableStateOf<List<String>>(emptyList()) }
+    // P-09: dejar subir/bajar en una parada intermedia (distinta al origen/destino del viaje).
+    var origenDeseado by remember { mutableStateOf("") }
+    var destinoDeseado by remember { mutableStateOf("") }
 
     LaunchedEffect(viajeId) {
         try {
@@ -47,6 +53,7 @@ fun PasajeroReservaScreen(
         } finally {
             cargandoViaje = false
         }
+        try { localidades = LocalidadesCache.obtener() } catch (_: Exception) {}
     }
 
     Column(
@@ -112,6 +119,24 @@ fun PasajeroReservaScreen(
                 )
             }
 
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Si subis o bajas en una parada intermedia (no en ${v.origen} ni en ${v.destino}), indicalo aca:",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(4.dp))
+            LocalidadSelector(
+                "Donde te subis (opcional)", localidades, origenDeseado,
+                permitirVacio = true, onSeleccion = { origenDeseado = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+            LocalidadSelector(
+                "Donde te bajas (opcional)", localidades, destinoDeseado,
+                permitirVacio = true, onSeleccion = { destinoDeseado = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             error?.let {
                 Spacer(Modifier.height(10.dp))
                 Text(it, color = MaterialTheme.colorScheme.error)
@@ -138,7 +163,9 @@ fun PasajeroReservaScreen(
                                     pasajero_id = session.pasajeroId,
                                     asientos = asientos.toIntOrNull() ?: 1,
                                     tipo = if (esEncomienda) "encomienda" else "pasajero",
-                                    tamano_encomienda = if (esEncomienda) tamanoEncomienda else null
+                                    tamano_encomienda = if (esEncomienda) tamanoEncomienda else null,
+                                    origen_deseado = origenDeseado.ifBlank { null },
+                                    destino_deseado = destinoDeseado.ifBlank { null }
                                 )
                             )
                             if (resp.isSuccessful && resp.body() != null) {

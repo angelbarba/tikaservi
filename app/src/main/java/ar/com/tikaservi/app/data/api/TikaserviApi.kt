@@ -137,6 +137,20 @@ interface TikaserviApi {
         @Path("id") id: Int,
         @Body body: ReservaCancelarRequest
     ): Response<OkRespuesta>
+
+    // P-07
+    @PUT("reservas/{id}")
+    suspend fun editarReserva(
+        @Path("id") id: Int,
+        @Body body: ReservaEditRequest
+    ): Response<OkRespuesta>
+
+    // P-08
+    @PUT("reservas/{id}/punto-retiro")
+    suspend fun actualizarPuntoRetiro(
+        @Path("id") id: Int,
+        @Body body: PuntoRetiroRequest
+    ): Response<OkRespuesta>
     // ---------------- Recuperar / restablecer contrasena ----------------
 
     @POST("pasajeros/recuperar-password")

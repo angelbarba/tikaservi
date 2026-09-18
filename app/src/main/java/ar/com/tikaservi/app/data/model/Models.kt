@@ -148,6 +148,19 @@ data class ReservaRespuesta(val reserva_id: Int)
 
 data class ReservaCancelarRequest(val pasajero_id: Int)
 
+// P-07: editar cantidad de asientos de una reserva ya confirmada.
+data class ReservaEditRequest(
+    val pasajero_id: Int,
+    val asientos: Int
+)
+
+// P-08: fijar/actualizar el punto de retiro de una reserva.
+data class PuntoRetiroRequest(
+    val pasajero_id: Int,
+    val lat: Double,
+    val lng: Double
+)
+
 data class ReservaPasajero(
     val id: Int,
     val asientos_reservados: Int,
