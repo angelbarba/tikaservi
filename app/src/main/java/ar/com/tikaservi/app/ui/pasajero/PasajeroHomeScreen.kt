@@ -660,14 +660,35 @@ private fun ReservaCard(
 private fun PasajeroDatosTab(session: SessionManager) {
     val scope = rememberCoroutineScope()
     var nombre by remember { mutableStateOf("") }
+    var dni by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var usuario by remember { mutableStateOf("") }
     var passwordNueva by remember { mutableStateOf("") }
     var passwordActual by remember { mutableStateOf("") }
     var guardando by remember { mutableStateOf(false) }
+    var cargando by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var mensaje by remember { mutableStateOf<String?>(null) }
+
+    // P-11: antes la pestana arrancaba siempre vacia.
+    LaunchedEffect(Unit) {
+        try {
+            val token = session.pasajeroToken
+            if (!token.isNullOrBlank()) {
+                val perfil = ApiClient.api.getPasajero(session.pasajeroId, token)
+                nombre = perfil.nombre
+                dni = perfil.dni ?: ""
+                telefono = perfil.telefono ?: ""
+                email = perfil.email ?: ""
+                usuario = perfil.usuario ?: ""
+            }
+        } catch (e: Exception) {
+            error = "No se pudieron cargar tus datos: ${e.message}"
+        } finally {
+            cargando = false
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Text("Mis datos", style = MaterialTheme.typography.titleMedium)
@@ -677,7 +698,10 @@ private fun PasajeroDatosTab(session: SessionManager) {
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(Modifier.height(12.dp))
+        if (cargando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         OutlinedTextField(nombre, { nombre = it }, label = { Text("Nombre (opcional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(dni, { dni = it }, label = { Text("DNI (opcional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(telefono, { telefono = it }, label = { Text("Telefono (opcional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
         Spacer(Modifier.height(8.dp))
@@ -710,6 +734,7 @@ private fun PasajeroDatosTab(session: SessionManager) {
                             PasajeroEditRequest(
                                 password_actual = passwordActual,
                                 nombre = nombre.ifBlank { null },
+                                dni = dni.ifBlank { null },
                                 telefono = telefono.ifBlank { null },
                                 email = email.ifBlank { null },
                                 usuario = usuario.ifBlank { null },

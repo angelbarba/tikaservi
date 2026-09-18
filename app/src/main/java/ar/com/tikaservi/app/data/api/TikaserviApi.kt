@@ -121,6 +121,13 @@ interface TikaserviApi {
     @POST("pasajeros/{id}/reenviar-codigo")
     suspend fun reenviarCodigoPasajero(@Path("id") pasajeroId: Int): Response<ReenviarCodigoResponse>
 
+    // P-11
+    @GET("pasajeros/{id}")
+    suspend fun getPasajero(
+        @Path("id") pasajeroId: Int,
+        @Header("X-Pasajero-Token") token: String
+    ): PasajeroPerfil
+
     @GET("pasajeros/{id}/reservas")
     suspend fun getReservasDePasajero(
         @Path("id") pasajeroId: Int,
@@ -176,6 +183,10 @@ interface TikaserviApi {
 
     @PUT("pasajeros/{id}")
     suspend fun editarPasajero(@Path("id") id: Int, @Body body: PasajeroEditRequest): Response<OkRespuesta>
+
+    // P-11
+    @GET("conductores/{id}")
+    suspend fun getConductor(@Path("id") id: Int): ConductorPerfil
 
     @PUT("conductores/{id}")
     suspend fun editarConductor(@Path("id") id: Int, @Body body: ConductorEditRequest): Response<OkRespuesta>

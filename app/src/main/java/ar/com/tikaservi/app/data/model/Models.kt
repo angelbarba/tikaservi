@@ -246,6 +246,26 @@ data class ConductorEditRequest(
     val password: String? = null
 )
 
+// P-11: perfil publico del conductor (GET /conductores/{id}, sin auth -
+// por eso solo trae nombre y foto, ver fix C-03 en el backend).
+data class ConductorPerfil(
+    val id: Int,
+    val nombre: String,
+    val foto_url: String? = null
+)
+
+// P-11: perfil propio del pasajero (GET /pasajeros/{id}, requiere
+// X-Pasajero-Token).
+data class PasajeroPerfil(
+    val id: Int,
+    val nombre: String,
+    val dni: String? = null,
+    val telefono: String? = null,
+    val email: String? = null,
+    val usuario: String? = null,
+    val foto_url: String? = null
+)
+
 // ---------- Solicitudes de pasajero ("pedir viaje") ----------
 
 data class SolicitudRequest(
