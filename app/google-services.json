@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "778839035284",
+    "project_id": "tikaservi-390ac",
+    "storage_bucket": "tikaservi-390ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778839035284:android:5835dbe5bc8093cfa1d381",
+        "android_client_info": {
+          "package_name": "ar.com.tikaservi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTqI9UPda_uZrHOZUN6i0NkqUWOnF0AeI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

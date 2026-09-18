@@ -151,6 +151,13 @@ interface TikaserviApi {
         @Path("id") id: Int,
         @Body body: PuntoRetiroRequest
     ): Response<OkRespuesta>
+
+    // P-12: tipo = "pasajero" -> mandar X-Pasajero-Token si hay sesion; tipo = "chofer" no lo necesita.
+    @POST("push/suscribir-fcm")
+    suspend fun suscribirPushFcm(
+        @Body body: PushSuscripcionFcmRequest,
+        @Header("X-Pasajero-Token") pasajeroToken: String? = null
+    ): Response<OkRespuesta>
     // ---------------- Recuperar / restablecer contrasena ----------------
 
     @POST("pasajeros/recuperar-password")

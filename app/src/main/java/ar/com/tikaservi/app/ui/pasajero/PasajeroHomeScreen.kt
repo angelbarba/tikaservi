@@ -36,6 +36,7 @@ import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
 import ar.com.tikaservi.app.ui.common.FechaSelector
 import ar.com.tikaservi.app.ui.common.TabPillRow
+import ar.com.tikaservi.app.push.RegistrarPushAlEntrar
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -57,6 +58,7 @@ fun PasajeroHomeScreen(
     LaunchedEffect(Unit) {
         try { localidades = LocalidadesCache.obtener() } catch (_: Exception) {}
     }
+    RegistrarPushAlEntrar()
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(

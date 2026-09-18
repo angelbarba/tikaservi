@@ -161,6 +161,13 @@ data class PuntoRetiroRequest(
     val lng: Double
 )
 
+// P-12: registrar el token FCM de este dispositivo para pasajero o chofer.
+data class PushSuscripcionFcmRequest(
+    val tipo: String,
+    val usuario_id: Int,
+    val token: String
+)
+
 data class ReservaPasajero(
     val id: Int,
     val asientos_reservados: Int,

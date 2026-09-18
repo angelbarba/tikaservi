@@ -18,6 +18,7 @@ import ar.com.tikaservi.app.ui.common.TabPillRow
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
 import ar.com.tikaservi.app.ui.common.FechaSelector
 import ar.com.tikaservi.app.ui.common.mensajeDeError
+import ar.com.tikaservi.app.push.RegistrarPushAlEntrar
 import kotlinx.coroutines.launch
 
 private val TABS = listOf("Mis viajes", "Pasajeros", "Datos")
@@ -32,6 +33,8 @@ fun ChoferHomeScreen(
     val context = LocalContext.current
     val session = remember { SessionManager(context) }
     var tab by remember { mutableStateOf(TABS[0]) }
+
+    RegistrarPushAlEntrar()
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
