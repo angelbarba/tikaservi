@@ -13,6 +13,7 @@ import ar.com.tikaservi.app.data.model.Viaje
 import ar.com.tikaservi.app.BuildConfig
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.TabPillRow
+import ar.com.tikaservi.app.ui.common.mensajeDeError
 import kotlinx.coroutines.launch
 
 private val TABS = listOf("Mis viajes", "Pasajeros", "Datos")
@@ -102,8 +103,15 @@ private fun MisViajesTab(
                     onCancelar = {
                         scope.launch {
                             try {
-                                ApiClient.api.cancelarViaje(viaje.id, session.conductorId)
-                                cargar()
+                                // Fix B-01: antes se ignoraba isSuccessful y se refrescaba
+                                // la lista igual aunque el backend hubiera rechazado el
+                                // pedido (403 ajeno, 409 ya cancelado, etc).
+                                val resp = ApiClient.api.cancelarViaje(viaje.id, session.conductorId)
+                                if (resp.isSuccessful) {
+                                    cargar()
+                                } else {
+                                    mensaje = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
+                                }
                             } catch (e: Exception) {
                                 mensaje = "No se pudo cancelar: ${e.message}"
                             }

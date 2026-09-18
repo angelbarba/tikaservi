@@ -344,8 +344,13 @@ private fun SolicitarViajeTab(localidades: List<String>, session: SessionManager
                         OutlinedButton(onClick = {
                             scope.launch {
                                 try {
-                                    ApiClient.api.cancelarSolicitud(s.id, CancelarSolicitudRequest(session.pasajeroId))
-                                    cargarSolicitudes()
+                                    // Fix B-01: antes se ignoraba isSuccessful.
+                                    val resp = ApiClient.api.cancelarSolicitud(s.id, CancelarSolicitudRequest(session.pasajeroId))
+                                    if (resp.isSuccessful) {
+                                        cargarSolicitudes()
+                                    } else {
+                                        mensaje = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
+                                    }
                                 } catch (e: Exception) {
                                     mensaje = "No se pudo cancelar: ${e.message}"
                                 }
@@ -411,8 +416,13 @@ private fun MisReservasTab(session: SessionManager, soloHistorial: Boolean) {
                             OutlinedButton(onClick = {
                                 scope.launch {
                                     try {
-                                        ApiClient.api.cancelarReserva(reserva.id, ReservaCancelarRequest(session.pasajeroId))
-                                        cargar()
+                                        // Fix B-01: antes se ignoraba isSuccessful.
+                                        val resp = ApiClient.api.cancelarReserva(reserva.id, ReservaCancelarRequest(session.pasajeroId))
+                                        if (resp.isSuccessful) {
+                                            cargar()
+                                        } else {
+                                            mensaje = mensajeDeError(resp.errorBody()?.string(), "Error del servidor (${resp.code()})")
+                                        }
                                     } catch (e: Exception) {
                                         mensaje = "No se pudo cancelar: ${e.message}"
                                     }
