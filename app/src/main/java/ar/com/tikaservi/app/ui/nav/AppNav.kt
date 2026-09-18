@@ -1,6 +1,7 @@
 package ar.com.tikaservi.app.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -9,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import ar.com.tikaservi.app.data.session.SessionEvents
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.chofer.ChoferHomeScreen
 import ar.com.tikaservi.app.ui.chofer.ChoferLoginScreen
@@ -58,6 +60,18 @@ fun TikaserviNavHost() {
         session.haySesionPasajero -> Rutas.HOME_PASAJERO
         session.haySesionChofer -> Rutas.HOME_CHOFER
         else -> Rutas.SELECCION_ROL
+    }
+
+    // B-03: el servidor rechazo el token de sesion del pasajero (vencido o
+    // cerrado desde otro dispositivo) -> limpiamos y volvemos a la seleccion
+    // de rol, en vez de dejar pantallas mostrando datos de una sesion muerta.
+    LaunchedEffect(Unit) {
+        SessionEvents.sesionExpirada.collect {
+            session.cerrarSesion()
+            navController.navigate(Rutas.SELECCION_ROL) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
     }
 
     NavHost(navController = navController, startDestination = inicio) {

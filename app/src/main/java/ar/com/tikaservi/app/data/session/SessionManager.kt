@@ -2,11 +2,33 @@ package ar.com.tikaservi.app.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 class SessionManager(context: Context) {
 
-    private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences("tikaservi_session", Context.MODE_PRIVATE)
+    private val appContext = context.applicationContext
+
+    // B-02: la sesion (token de pasajero, ids) va cifrada con Jetpack Security en
+    // vez de SharedPreferences en texto plano. Si el keystore falla (dispositivo
+    // raro, o quedo corrupto tras un cambio de clave), volvemos a un archivo
+    // plano de emergencia en vez de romper el login por completo.
+    private val prefs: SharedPreferences = try {
+        val masterKey = MasterKey.Builder(appContext)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            appContext,
+            "tikaservi_session_v2",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        Log.e("SessionManager", "No se pudo abrir la sesion cifrada, uso fallback sin cifrar", e)
+        appContext.getSharedPreferences("tikaservi_session", Context.MODE_PRIVATE)
+    }
 
     enum class Rol { NINGUNO, PASAJERO, CHOFER }
 

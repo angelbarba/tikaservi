@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.clickable
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -194,13 +195,32 @@ private fun BuscarViajeTab(localidades: List<String>, onVerViaje: (Int) -> Unit)
 @Composable
 private fun ViajeCard(viaje: Viaje, onClick: () -> Unit) {
     ElevatedCard(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("${viaje.origen} - ${viaje.destino}", style = MaterialTheme.typography.titleMedium)
-            Text("${viaje.fecha} - ${viaje.hora_salida}")
-            viaje.precio?.let { Text("$ $it") }
-            Text("Asientos disponibles: ${viaje.asientos_disponibles}")
-            viaje.conductor_nombre?.let { Text("Conductor: $it") }
-            if (viaje.acepta_encomiendas == 1) Text("Acepta encomiendas")
+        Row(modifier = Modifier.padding(16.dp)) {
+            if (viaje.conductor_foto_url != null) {
+                AsyncImage(
+                    model = viaje.conductor_foto_url,
+                    contentDescription = "Foto del conductor",
+                    modifier = Modifier.size(56.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text("${viaje.origen} - ${viaje.destino}", style = MaterialTheme.typography.titleMedium)
+                Text("${viaje.fecha} - ${viaje.hora_salida}")
+                viaje.precio?.let { Text("$ $it") }
+                Text("Asientos disponibles: ${viaje.asientos_disponibles}")
+                viaje.conductor_nombre?.let { nombre ->
+                    val fiabilidad = viaje.conductor_viajes_finalizados?.let { " - $it viajes finalizados" } ?: ""
+                    Text("Conductor: $nombre$fiabilidad")
+                }
+                if (viaje.marca_modelo != null || viaje.patente != null) {
+                    Text(
+                        listOfNotNull(viaje.marca_modelo, viaje.patente).joinToString(" - "),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                if (viaje.acepta_encomiendas == 1) Text("Acepta encomiendas")
+            }
         }
     }
 }

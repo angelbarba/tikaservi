@@ -1,5 +1,7 @@
 package ar.com.tikaservi.app.ui.chofer
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -57,6 +59,23 @@ fun ChoferReservasViajeScreen(viajeId: Int, onVolver: () -> Unit) {
                         Text("Tipo: ${r.tipo}${r.tamano_encomienda?.let { " ($it)" } ?: ""}")
                         Text("Asientos: ${r.asientos_reservados} - Estado: ${r.estado}")
                         r.pasajero_viajes_realizados?.let { Text("Viajes anteriores del pasajero: $it") }
+                        if (r.origen_deseado != null || r.destino_deseado != null) {
+                            Text(
+                                "Prefiere: ${r.origen_deseado ?: "-"} -> ${r.destino_deseado ?: "-"}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        if (r.punto_retiro_lat != null && r.punto_retiro_lng != null) {
+                            Spacer(Modifier.height(6.dp))
+                            OutlinedButton(onClick = {
+                                val uri = Uri.parse("geo:${r.punto_retiro_lat},${r.punto_retiro_lng}?q=${r.punto_retiro_lat},${r.punto_retiro_lng}(${Uri.encode(r.nombre)})")
+                                try {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                } catch (e: Exception) {
+                                    mensaje = "No se encontro una app de mapas instalada"
+                                }
+                            }) { Text("Ver punto de retiro") }
+                        }
                     }
                 }
             }
