@@ -68,6 +68,27 @@ interface TikaserviApi {
         @Query("conductor_id") conductorId: Int
     ): Response<OkRespuesta>
 
+    // Fase 4 (P-01/P-02/P-03): finalizar, reactivar y editar un viaje ya
+    // publicado - existian en el backend y en la web desde siempre, pero la
+    // app nunca los llamaba.
+    @POST("viajes/{id}/finalizar")
+    suspend fun finalizarViaje(
+        @Path("id") id: Int,
+        @Query("conductor_id") conductorId: Int
+    ): Response<OkRespuesta>
+
+    @POST("viajes/{id}/reactivar")
+    suspend fun reactivarViaje(
+        @Path("id") id: Int,
+        @Query("conductor_id") conductorId: Int
+    ): Response<OkRespuesta>
+
+    @PUT("viajes/{id}")
+    suspend fun editarViaje(
+        @Path("id") id: Int,
+        @Body body: ViajeEditRequest
+    ): Response<OkRespuesta>
+
     @GET("viajes/{id}/reservas")
     suspend fun getReservasDeViaje(
         @Path("id") viajeId: Int,

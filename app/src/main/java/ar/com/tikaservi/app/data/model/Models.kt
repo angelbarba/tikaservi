@@ -116,6 +116,20 @@ data class ViajeRequest(
 
 data class ViajeRespuesta(val viaje_id: Int)
 
+// P-03: edicion de viaje ya publicado (paridad con conductor-viajes.html).
+// Todos los campos opcionales salvo conductor_id: solo se manda lo que
+// cambio, igual que hace la web (el backend conserva el resto tal cual esta).
+data class ViajeEditRequest(
+    val conductor_id: Int,
+    val origen: String? = null,
+    val destino: String? = null,
+    val fecha: String? = null,
+    val hora_salida: String? = null,
+    val precio: Double? = null,
+    val paradas: String? = null,
+    val asientos_disponibles: Int? = null
+)
+
 // ---------- Reservas ----------
 
 data class ReservaRequest(
