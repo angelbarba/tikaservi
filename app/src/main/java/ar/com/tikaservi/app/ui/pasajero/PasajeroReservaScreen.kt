@@ -2,6 +2,10 @@ package ar.com.tikaservi.app.ui.pasajero
 
 import ar.com.tikaservi.app.ui.common.mensajeDeError
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,12 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import ar.com.tikaservi.app.data.api.ApiClient
 import ar.com.tikaservi.app.data.api.LocalidadesCache
 import ar.com.tikaservi.app.data.model.ReservaRequest
 import ar.com.tikaservi.app.data.model.Viaje
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
+import ar.com.tikaservi.app.ui.common.obtenerUbicacionActual
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +37,49 @@ fun PasajeroReservaScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val session = remember { SessionManager(context) }
+
+    // Fix geoposicion: antes el punto de retiro solo se podia cargar DESPUES
+    // de reservar (boton aparte en "Mis reservas"), nunca desde aca. Ahora se
+    // puede marcar la ubicacion actual en el momento de reservar el asiento
+    // o pedir la encomienda, y viaja en el mismo POST /reservas.
+    var puntoRetiroLat by remember { mutableStateOf<Double?>(null) }
+    var puntoRetiroLng by remember { mutableStateOf<Double?>(null) }
+    var buscandoUbicacion by remember { mutableStateOf(false) }
+    var errorUbicacion by remember { mutableStateOf<String?>(null) }
+
+    fun pedirUbicacion() {
+        errorUbicacion = null
+        buscandoUbicacion = true
+        obtenerUbicacionActual(
+            context,
+            onResultado = { lat, lng ->
+                puntoRetiroLat = lat
+                puntoRetiroLng = lng
+                buscandoUbicacion = false
+            },
+            onError = { err ->
+                buscandoUbicacion = false
+                errorUbicacion = err
+            }
+        )
+    }
+
+    val permisoUbicacion = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) {
+            pedirUbicacion()
+        } else {
+            errorUbicacion = "Sin permiso de ubicacion no se puede marcar el punto de retiro"
+        }
+    }
+
+    fun pedirUbicacionYMarcar() {
+        val concedido = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (concedido) pedirUbicacion() else permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 
     var viaje by remember { mutableStateOf<Viaje?>(null) }
     var cargandoViaje by remember { mutableStateOf(true) }
@@ -137,6 +186,32 @@ fun PasajeroReservaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Spacer(Modifier.height(12.dp))
+            Text("Punto de retiro (opcional)", style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            if (puntoRetiroLat != null && puntoRetiroLng != null) {
+                Text(
+                    "Ubicacion marcada: %.5f, %.5f".format(puntoRetiroLat, puntoRetiroLng),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+            OutlinedButton(
+                onClick = { pedirUbicacionYMarcar() },
+                enabled = !buscandoUbicacion,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (buscandoUbicacion) {
+                    CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(if (puntoRetiroLat == null) "Usar mi ubicacion actual" else "Actualizar mi ubicacion")
+                }
+            }
+            errorUbicacion?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
             error?.let {
                 Spacer(Modifier.height(10.dp))
                 Text(it, color = MaterialTheme.colorScheme.error)
@@ -165,7 +240,9 @@ fun PasajeroReservaScreen(
                                     tipo = if (esEncomienda) "encomienda" else "pasajero",
                                     tamano_encomienda = if (esEncomienda) tamanoEncomienda else null,
                                     origen_deseado = origenDeseado.ifBlank { null },
-                                    destino_deseado = destinoDeseado.ifBlank { null }
+                                    destino_deseado = destinoDeseado.ifBlank { null },
+                                    punto_retiro_lat = puntoRetiroLat,
+                                    punto_retiro_lng = puntoRetiroLng
                                 )
                             )
                             if (resp.isSuccessful && resp.body() != null) {

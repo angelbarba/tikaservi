@@ -5,11 +5,7 @@ import ar.com.tikaservi.app.ui.common.mensajeDeError
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.net.Uri
-import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -35,6 +31,7 @@ import ar.com.tikaservi.app.data.model.*
 import ar.com.tikaservi.app.BuildConfig
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
+import ar.com.tikaservi.app.ui.common.obtenerUbicacionActual
 import ar.com.tikaservi.app.ui.common.FechaSelector
 import ar.com.tikaservi.app.ui.common.TabPillRow
 import ar.com.tikaservi.app.push.RegistrarPushAlEntrar
@@ -498,33 +495,6 @@ private fun MisReservasTab(session: SessionManager, soloHistorial: Boolean) {
                 )
             }
         }
-    }
-}
-
-// P-08: sin dependencia de Google Play Services; usa el LocationManager del sistema.
-private fun obtenerUbicacionActual(
-    context: android.content.Context,
-    onResultado: (Double, Double) -> Unit,
-    onError: (String) -> Unit
-) {
-    val lm = context.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager
-    val proveedor = when {
-        lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-        lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-        else -> null
-    }
-    if (proveedor == null) {
-        onError("Activa la ubicacion del dispositivo para marcar el punto de retiro")
-        return
-    }
-    try {
-        lm.requestSingleUpdate(proveedor, object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                onResultado(location.latitude, location.longitude)
-            }
-        }, Looper.getMainLooper())
-    } catch (e: SecurityException) {
-        onError("Sin permiso de ubicacion")
     }
 }
 

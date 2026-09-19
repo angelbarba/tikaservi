@@ -27,6 +27,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Fix notificaciones: sin esto, FCM muestra los pushes con
+             notification payload (background/app cerrada) en un canal
+             generico y muchos fabricantes (Xiaomi, Samsung, etc) los
+             silencian. Usa el canal de alta prioridad creado en TikaserviApp. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="tikaservi_notificaciones" />
+
         <!-- P-12: recibe mensajes FCM incluso con la app en background/cerrada -->
         <service
             android:name=".push.TikaserviFirebaseMessagingService"
