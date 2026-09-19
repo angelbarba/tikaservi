@@ -31,7 +31,7 @@ import ar.com.tikaservi.app.data.model.*
 import ar.com.tikaservi.app.BuildConfig
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
-import ar.com.tikaservi.app.ui.common.obtenerUbicacionActual
+import ar.com.tikaservi.app.ui.common.MapaPuntoRetiroDialog
 import ar.com.tikaservi.app.ui.common.FechaSelector
 import ar.com.tikaservi.app.ui.common.TabPillRow
 import ar.com.tikaservi.app.push.RegistrarPushAlEntrar
@@ -511,49 +511,22 @@ private fun ReservaCard(
     var editandoAsientos by remember { mutableStateOf(false) }
     var nuevaCantidad by remember(reserva.id) { mutableStateOf(reserva.asientos_reservados.toString()) }
     var guardandoAsientos by remember { mutableStateOf(false) }
-    var buscandoUbicacion by remember { mutableStateOf(false) }
+    var guardandoUbicacion by remember { mutableStateOf(false) }
     var errorLocal by remember { mutableStateOf<String?>(null) }
+    var mostrarMapaPuntoRetiro by remember { mutableStateOf(false) }
 
+    // Fix geoposicion: mismo picker con mapa (geolocalizar o elegir a mano)
+    // que en la pantalla de reservar/pedir encomienda.
     val permisoUbicacion = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { concedido ->
-        if (concedido) {
-            buscandoUbicacion = true
-            obtenerUbicacionActual(
-                context,
-                onResultado = { lat, lng ->
-                    onGuardarPuntoRetiro(lat, lng) { err ->
-                        buscandoUbicacion = false
-                        errorLocal = err
-                    }
-                },
-                onError = { err -> buscandoUbicacion = false; errorLocal = err }
-            )
-        } else {
-            errorLocal = "Sin permiso de ubicacion no se puede marcar el punto de retiro"
-        }
-    }
+    ) { _ -> mostrarMapaPuntoRetiro = true }
 
-    fun pedirUbicacionYGuardar() {
+    fun abrirSelectorDeUbicacion() {
         errorLocal = null
         val concedido = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        if (concedido) {
-            buscandoUbicacion = true
-            obtenerUbicacionActual(
-                context,
-                onResultado = { lat, lng ->
-                    onGuardarPuntoRetiro(lat, lng) { err ->
-                        buscandoUbicacion = false
-                        errorLocal = err
-                    }
-                },
-                onError = { err -> buscandoUbicacion = false; errorLocal = err }
-            )
-        } else {
-            permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
+        if (concedido) mostrarMapaPuntoRetiro = true else permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     val puedeModificar = !soloHistorial && reserva.estado == "confirmada" && reserva.viaje_estado == "activo"
@@ -591,16 +564,32 @@ private fun ReservaCard(
                             context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                         }) { Text("Ver punto de retiro") }
                     }
-                    OutlinedButton(enabled = !buscandoUbicacion, onClick = { pedirUbicacionYGuardar() }) {
+                    OutlinedButton(enabled = !guardandoUbicacion, onClick = { abrirSelectorDeUbicacion() }) {
                         Text(
                             when {
-                                buscandoUbicacion -> "Obteniendo ubicacion..."
+                                guardandoUbicacion -> "Guardando..."
                                 reserva.punto_retiro_lat != null -> "Actualizar punto de retiro"
-                                else -> "Marcar punto de retiro (mi ubicacion)"
+                                else -> "Marcar punto de retiro"
                             }
                         )
                     }
                 }
+            }
+
+            if (mostrarMapaPuntoRetiro) {
+                MapaPuntoRetiroDialog(
+                    latInicial = reserva.punto_retiro_lat,
+                    lngInicial = reserva.punto_retiro_lng,
+                    onConfirmar = { lat, lng ->
+                        mostrarMapaPuntoRetiro = false
+                        guardandoUbicacion = true
+                        onGuardarPuntoRetiro(lat, lng) { err ->
+                            guardandoUbicacion = false
+                            errorLocal = err
+                        }
+                    },
+                    onCancelar = { mostrarMapaPuntoRetiro = false }
+                )
             }
 
             if (puedeModificar && reserva.tipo == "pasajero") {

@@ -24,7 +24,7 @@ import ar.com.tikaservi.app.data.model.ReservaRequest
 import ar.com.tikaservi.app.data.model.Viaje
 import ar.com.tikaservi.app.data.session.SessionManager
 import ar.com.tikaservi.app.ui.common.LocalidadSelector
-import ar.com.tikaservi.app.ui.common.obtenerUbicacionActual
+import ar.com.tikaservi.app.ui.common.MapaPuntoRetiroDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,41 +44,24 @@ fun PasajeroReservaScreen(
     // o pedir la encomienda, y viaja en el mismo POST /reservas.
     var puntoRetiroLat by remember { mutableStateOf<Double?>(null) }
     var puntoRetiroLng by remember { mutableStateOf<Double?>(null) }
-    var buscandoUbicacion by remember { mutableStateOf(false) }
     var errorUbicacion by remember { mutableStateOf<String?>(null) }
 
-    fun pedirUbicacion() {
-        errorUbicacion = null
-        buscandoUbicacion = true
-        obtenerUbicacionActual(
-            context,
-            onResultado = { lat, lng ->
-                puntoRetiroLat = lat
-                puntoRetiroLng = lng
-                buscandoUbicacion = false
-            },
-            onError = { err ->
-                buscandoUbicacion = false
-                errorUbicacion = err
-            }
-        )
-    }
+    var mostrarMapaPuntoRetiro by remember { mutableStateOf(false) }
 
+    // Fix geoposicion (pedido explicito): dar las dos opciones, geolocalizar
+    // automatico O elegir a mano en un mapa - igual que el picker Leaflet de
+    // la web. Pedimos el permiso de ubicacion (para el intento automatico
+    // dentro del mapa) y despues abrimos el dialogo con el mapa.
     val permisoUbicacion = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { concedido ->
-        if (concedido) {
-            pedirUbicacion()
-        } else {
-            errorUbicacion = "Sin permiso de ubicacion no se puede marcar el punto de retiro"
-        }
-    }
+    ) { _ -> mostrarMapaPuntoRetiro = true }
 
-    fun pedirUbicacionYMarcar() {
+    fun abrirSelectorDeUbicacion() {
+        errorUbicacion = null
         val concedido = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        if (concedido) pedirUbicacion() else permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (concedido) mostrarMapaPuntoRetiro = true else permisoUbicacion.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     var viaje by remember { mutableStateOf<Viaje?>(null) }
@@ -197,19 +180,27 @@ fun PasajeroReservaScreen(
                 Spacer(Modifier.height(4.dp))
             }
             OutlinedButton(
-                onClick = { pedirUbicacionYMarcar() },
-                enabled = !buscandoUbicacion,
+                onClick = { abrirSelectorDeUbicacion() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (buscandoUbicacion) {
-                    CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
-                } else {
-                    Text(if (puntoRetiroLat == null) "Usar mi ubicacion actual" else "Actualizar mi ubicacion")
-                }
+                Text(if (puntoRetiroLat == null) "Geolocalizar / elegir en el mapa" else "Cambiar ubicacion en el mapa")
             }
             errorUbicacion?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            if (mostrarMapaPuntoRetiro) {
+                MapaPuntoRetiroDialog(
+                    latInicial = puntoRetiroLat,
+                    lngInicial = puntoRetiroLng,
+                    onConfirmar = { lat, lng ->
+                        puntoRetiroLat = lat
+                        puntoRetiroLng = lng
+                        mostrarMapaPuntoRetiro = false
+                    },
+                    onCancelar = { mostrarMapaPuntoRetiro = false }
+                )
             }
 
             error?.let {
