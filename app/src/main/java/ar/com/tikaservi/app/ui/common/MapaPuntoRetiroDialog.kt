@@ -1,16 +1,20 @@
 package ar.com.tikaservi.app.ui.common
 
 import android.annotation.SuppressLint
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import org.json.JSONObject
 
 /**
@@ -39,6 +43,18 @@ fun MapaPuntoRetiroDialog(
     val context = LocalContext.current
 
     Dialog(onDismissRequest = onCancelar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        // Fix: el Dialog de Compose crea su ventana con alto "wrap content"
+        // por defecto. Sin forzarla a MATCH_PARENT, el fillMaxSize() de aca
+        // abajo no tiene contra que expandirse y el WebView (con el mapa)
+        // queda colapsado a practicamente 0 de alto: por eso solo se veian
+        // el buscador y los botones, y el mapa aparecia en blanco/vacio.
+        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect {
+            dialogWindow?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
         Surface(modifier = Modifier.fillMaxSize()) {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
