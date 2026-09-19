@@ -3,8 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet empaquetado local (assets/leaflet/): antes se cargaba desde
+     unpkg.com y en el celular real la pagina cargaba (buscador y botones
+     se veian, son HTML/CSS propios) pero el mapa quedaba en blanco - si
+     el CDN no carga, "L" nunca se define y el resto del script (que crea
+     el mapa Y engancha los botones Buscar/Cancelar/Confirmar) no corre.
+     Sirviendolo local no depende de que el celular llegue a ese CDN. -->
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<script src="leaflet/leaflet.js"></script>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: #fff; }
   #panel { display: flex; flex-direction: column; height: 100%; }
@@ -50,6 +56,22 @@
   // query string, Android.kt ya la obtuvo con obtenerUbicacionActual), y
   // deja ajustarla a mano arrastrando el pin, tocando el mapa o buscando una
   // direccion - igual que la web.
+  //
+  // Si algo de esto falla (Leaflet no cargo, etc) se muestra el motivo
+  // directamente en el area del mapa en vez de quedar en blanco sin pistas -
+  // no hay forma facil de ver la consola del WebView en el celular real.
+  window.onerror = function (mensaje) {
+    var mapaDiv = document.getElementById("mapa");
+    if (mapaDiv && !mapaDiv.dataset.error) {
+      mapaDiv.dataset.error = "1";
+      mapaDiv.innerHTML = '<div style="padding:16px;color:#a00;font-size:13px;">' +
+        'No se pudo cargar el mapa: ' + mensaje + '</div>';
+    }
+  };
+  if (typeof L === "undefined") {
+    throw new Error("Leaflet no se cargo (revisa assets/leaflet/leaflet.js)");
+  }
+
   const params = new URLSearchParams(location.search);
   const latInicial = params.has("lat") ? parseFloat(params.get("lat")) : null;
   const lngInicial = params.has("lng") ? parseFloat(params.get("lng")) : null;

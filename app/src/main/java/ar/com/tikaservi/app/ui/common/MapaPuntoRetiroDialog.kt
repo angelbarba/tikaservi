@@ -62,6 +62,10 @@ fun MapaPuntoRetiroDialog(
                     val webView = WebView(ctx)
                     webView.settings.javaScriptEnabled = true
                     webView.settings.domStorageEnabled = true
+                    // Permite inspeccionar este WebView desde
+                    // chrome://inspect en una PC conectada por USB - util
+                    // para diagnosticar sin logcat en el celular real.
+                    WebView.setWebContentsDebuggingEnabled(true)
 
                     webView.addJavascriptInterface(object {
                         @JavascriptInterface
