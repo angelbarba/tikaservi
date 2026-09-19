@@ -38,7 +38,7 @@ fun MapaPuntoRetiroDialog(
 ) {
     val context = LocalContext.current
 
-    Dialog(onDismissRequest = onCancelar, properties = DialogProperties(usesPlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onCancelar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(modifier = Modifier.fillMaxSize()) {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
